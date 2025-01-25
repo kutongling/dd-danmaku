@@ -1,24 +1,60 @@
 # emby-danmaku
 
 ## Emby danmaku extension
-![截图](https://raw.githubusercontent.com/RyoLee/emby-danmaku/res/S0.png)
+
+![演示](https://raw.githubusercontent.com/kutongling/dd-danmaku/master/%E6%BC%94%E7%A4%BA.png)
+
+## 版本变化
+
+### 1.0.12
+
+- 添加日志功能
+
+### 1.0.11
+
+- 过滤等级会立即生效
+- 添加高级过滤按钮，可按需过滤滚动弹幕和顶/底部等弹幕
+  - 此修改基于 [dd-danmaku](https://github.com/chen3861229/dd-danmaku)
+- 添加弹幕信息关闭按钮，删除原有弹幕信息按键
+- 弹幕信息添加原有弹幕数量与加载弹幕数量
+- 修改弹幕加载时机逻辑，避免某些浏览器（edge）会在播放时没有加载弹幕
+
+### 1.0
+
+- 右下角添加弹幕信息展示功能
+- 搜索弹幕 UI 修改，添加图片展示和原标题切换按钮
+  - 以上修改基于 [dd-danmaku](https://github.com/chen3861229/dd-danmaku)
+- 修复手动填充时无法自动填充标题和集数的问题
+
+## 引用项目
+
+- **原项目 dd-danmaku** by 9channel  
+  Repository: [https://github.com/9channel/dd-danmaku](https://github.com/9channel/dd-danmaku)  
+  License: MIT License
+
+- **使用代码来自 dd-danmaku** by chen3861229  
+  功能：添加高级过滤按钮，可按需过滤滚动弹幕和顶/底部等弹幕，修改了搜索弹幕的 UI，添加了图片展示和原标题切换按钮。  
+  Repository: [https://github.com/chen3861229/dd-danmaku](https://github.com/chen3861229/dd-danmaku)  
+  License: MIT License
+
+- **使用代码来自 emby-danmaku** by hiback  
+  功能：实现了透明度控制功能。  
+  Repository: [https://github.com/hiback/emby-danmaku](https://github.com/hiback/emby-danmaku)  
+  License: MIT License
+
 
 ## 安装
 
 任选以下一种方式安装即可
-
-### 浏览器插件(推荐)
-
-1. [Tampermonkey](https://www.tampermonkey.net/)
-2. [添加脚本](https://cdn.jsdelivr.net/gh/RyoLee/emby-danmaku@gh-pages/ede.user.js)
 
 ### 修改服务端
 
 修改文件 /system/dashboard-ui/index.html (Docker版,其他类似),在`</body>`前添加如下标签
 
 ```
-<script src="https://cdn.jsdelivr.net/gh/RyoLee/emby-danmaku@gh-pages/ede.user.js" defer></script>
+<script src="https://cdn.jsdelivr.net/gh/hiback/emby-danmaku@develop/ede.js" defer></script>
 ```
+
 该方式安装与浏览器插件安装**可同时使用不冲突**
 
 ### 修改客户端
@@ -37,7 +73,7 @@
 - 过滤等级: 过滤弹幕强度,等级越高强度越大,0级无限制*
 - 弹幕信息: 通过通知(以及后台log)显示当前匹配弹幕信息
 
-    **除0级外均带有每3秒6条的垂直方向弹幕密度限制,高于该限制密度的顶部/底部弹幕将会被转为普通弹幕*
+  **除0级外均带有每3秒6条的垂直方向弹幕密度限制,高于该限制密度的顶部/底部弹幕将会被转为普通弹幕*
 
 ## 弹幕
 
@@ -51,9 +87,5 @@
 
 1. 译名导致的异常: 如『よふかしのうた』 Emby 识别为《彻夜之歌》后因为弹弹 play 中为《夜曲》导致无法匹配
 2. 存在多季/剧场版/OVA 等导致的异常: 如『OVERLORD』第四季若使用S[N]格式归档(如OVERLORD/S4E1.mkv或OVERLORD/S4/E1.mkv),可能出现匹配失败/错误等现象
-3. 其他加载BUG: ~~鉴定为后端程序猿不会前端还要硬写JS~~,有BUG麻烦 [开个issue](https://github.com/RyoLee/emby-danmaku/issues/new/choose) THX
 
 **首次播放时请检查当前弹幕信息是否正确匹配,若匹配错误请尝试手动匹配**
-
-
-[![Stargazers over time](https://starchart.cc/RyoLee/emby-danmaku.svg)](https://starchart.cc/RyoLee/emby-danmaku)
