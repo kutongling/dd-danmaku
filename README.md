@@ -2,44 +2,41 @@
 
 ## Emby danmaku extension
 
-![演示](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/%E6%BC%94%E7%A4%BA.jpg)
+![演示](https://raw.githubusercontent.com/kutongling/dd-danmaku/master/%E6%BC%94%E7%A4%BA.png)
 
 ## 版本变化
 
-### v1.0.13.5 (当前版本)
+### 1.0.13.5
 
-🌟 **核心功能**
+1. 重要功能更新：
 
-- 新增弹幕设置面板,可调整:
-  - 字体大小
-  - 透明度
-  - 弹幕位置和效果
+* 新增弹幕设置面板，可调整字体大小和透明度
+* 优化过滤设置界面，增加关键词过滤功能
+* 添加按钮顺序自定义功能
+* 增加弹幕缓存机制，提高加载速度
+* 改进自动匹配算法，支持使用原始标题搜索
 
-- 优化过滤系统:
-  - 关键词过滤
-  - 类型过滤 (滚动/固定/彩色等)
-  - 密度过滤 (从弱到极限4个等级)
+2. 界面优化：
 
-- 性能提升:
-  - 添加弹幕缓存机制
-  - 优化 resize 监听器性能
-  - 改进渲染效率
+* 全新设计的设置对话框UI
+* 更美观的滑块控件样式
+* 改进搜索界面布局
+* 添加更多视觉反馈和动画效果
 
-🎨 **界面优化**
+3. 性能优化：
 
-- 全新设计的设置对话框
-- 可自定义按钮顺序
-- 更现代的滑块控件
-- 弹幕调试信息面板
+* 优化resize监听器性能
+* 添加防重复搜索机制
+* 改进弹幕渲染效率
 
-🛠 **其他改进**
+4. 其他改进：
 
-- 支持使用原始标题搜索
-- 防重复搜索机制
-- 完善的错误处理
-- 更好的移动设备适配
+* 改进错误处理和日志系统
+* 添加缓存管理功能
+* 支持还原默认设置
+* 更好的移动设备适配
 
-### 1.0.12(历史版本)
+### 1.0.12
 
 - 添加日志功能
 
@@ -58,6 +55,13 @@
 - 搜索弹幕 UI 修改，添加图片展示和原标题切换按钮
   - 以上修改基于 [dd-danmaku](https://github.com/chen3861229/dd-danmaku)
 - 修复手动填充时无法自动填充标题和集数的问题
+
+## 展示
+  ![1](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-09.png)
+  ![2](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-21.png)
+  ![3](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-32.png)
+  ![4](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-40.png)
+  
 
 ## 引用项目
 
