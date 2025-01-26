@@ -2,7 +2,7 @@
 
 ## Emby danmaku extension
 
-![演示](https://raw.githubusercontent.com/kutongling/dd-danmaku/master/%E6%BC%94%E7%A4%BA.png)
+![演示](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/演示.jpg)
 
 ## 版本变化
 
