@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       RyoLee
-// @version      1.0.13.6
+// @version      1.0.13.7
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -232,6 +232,14 @@
       this.buttonOrder = window.localStorage.getItem('danmakuButtonOrder') ?
       JSON.parse(window.localStorage.getItem('danmakuButtonOrder')) :
       ['displayDanmaku', 'danmakuSettings', 'filterSettings', 'switchDanmakuInfo', 'searchDanmaku', 'showDanmakuLog'];
+      
+      // 添加代理相关配置
+      this.currentProxyIndex = 0;
+      this.customProxyServer = window.localStorage.getItem('danmakuCustomProxy') || '';
+      const savedProxyIndex = window.localStorage.getItem('danmakuProxyIndex');
+      if (savedProxyIndex !== null) {
+        this.currentProxyIndex = parseInt(savedProxyIndex);
+      }
     }
   }
 
@@ -553,12 +561,25 @@
     return searchAnimeDirectly(name);
   }
 
+  // 在全局配置区域添加代理配置
+  const defaultProxyServers = [
+    'https://ktl-dd.vercel.app/',
+    'https://ktl-api-cf.ygjddmz.workers.dev/'
+  ];
+
   async function searchAnimeDirectly(name) {
     try {
-      const searchUrl = 'https://ktl-api-cf.ygjddmz.workers.dev/api/v2/search/episodes?anime=' + encodeURIComponent(name);
+      // 获取当前代理服务器
+      const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
+      const searchUrl = `${proxyServer}api/v2/search/episodes?anime=${encodeURIComponent(name)}`;
+      
       const response = await fetch(searchUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const animaInfo = await response.json();
-
+      // ...existing code...
       if (!animaInfo || !animaInfo.animes || animaInfo.animes.length === 0) {
         return null;
       }
@@ -573,6 +594,13 @@
 
       return animaInfo;
     } catch (error) {
+      // 如果当前代理失败,尝试切换到备用代理
+      if (!window.ede.customProxyServer && window.ede.currentProxyIndex < defaultProxyServers.length - 1) {
+        window.ede.currentProxyIndex++;
+        window.localStorage.setItem('danmakuProxyIndex', window.ede.currentProxyIndex);
+        showTooltip(`正在切换到备用代理服务器 ${window.ede.currentProxyIndex + 1}`);
+        return searchAnimeDirectly(name);
+      }
       console.error('搜索失败:', error);
       return null;
     }
@@ -600,7 +628,9 @@
 
   async function getCommentsDirectly(episodeId) {
     try {
-      const url = `https://ktl-api-cf.ygjddmz.workers.dev/api/v2/comment/${episodeId}?withRelated=true&chConvert=${window.ede.chConvert}`;
+      const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
+      const url = `${proxyServer}api/v2/comment/${episodeId}?withRelated=true&chConvert=${window.ede.chConvert}`;
+      
       const response = await fetch(url);
       const responseText = await response.text();
 
@@ -631,6 +661,13 @@
         throw new Error(`解析响应失败: ${parseError.message}`);
       }
     } catch (error) {
+      // 如果当前代理失败,尝试切换到备用代理
+      if (!window.ede.customProxyServer && window.ede.currentProxyIndex < defaultProxyServers.length - 1) {
+        window.ede.currentProxyIndex++;
+        window.localStorage.setItem('danmakuProxyIndex', window.ede.currentProxyIndex);
+        showTooltip(`正在切换到备用代理服务器 ${window.ede.currentProxyIndex + 1}`);
+        return getCommentsDirectly(episodeId);
+      }
       window.ede.lastError = error.stack;
       console.error('获取弹幕失败:', error);
       sendNotification('获取弹幕失败', error.message);
@@ -1341,11 +1378,16 @@
       <div style="display: flex; flex-direction: column; padding: 1em; background: #1f1f1f; color: #fff;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 1em;">
           <h3 style="margin: 0;">调试日志</h3>
+          <button is="emby-button" id="toggleLogContent" class="paper-icon-button-light" title="展开/折叠日志">
+            <span class="md-icon">expand_more</span>
+          </button>
           <button is="emby-button" id="closeLogDialog" class="paper-icon-button-light" title="关闭">
             <span class="md-icon">close</span>
           </button>
         </div>
-        <div id="logContent" style="white-space: pre-wrap; background: #333; padding: 1em; max-height: 400px; overflow-y: auto;"></div>
+        
+        <!-- 日志内容 - 默认折叠 -->
+        <div id="logContent" style="display: none; white-space: pre-wrap; background: #333; padding: 1em; max-height: 400px; overflow-y: auto;"></div>
 
         <!-- 添加更多设置折叠面板 -->
         <div style="margin-top: 1em;">
@@ -1355,8 +1397,7 @@
             更多设置
             <span class="md-icon" style="margin-left: auto;">expand_more</span>
           </button>
-          <div id="moreSettings" style="display: none; background: rgba(255,255,255,0.05);
-               padding: 1em; border-radius: 8px; margin-bottom: 1em;">
+          <div id="moreSettings" style="display: none; background: rgba(255,255,255,0.05); padding: 1em; border-radius: 8px;">
             <!-- 缓存控制 -->
             <div style="margin-bottom: 1em;">
               <label style="display: flex; align-items: center; margin-bottom: 1em;">
@@ -1365,10 +1406,45 @@
               </label>
             </div>
 
-            <!-- 按钮顺序设置 -->
-            <div>
-              <h4 style="margin: 0 0 1em 0; color: #00a4dc;">按钮顺序</h4>
-              <div id="buttonOrderContainer" style="display: flex; flex-direction: column; gap: 0.5em;">
+            <!-- 功能排序区域 -->
+            <div class="setting-section" style="margin-bottom: 1em;">
+              <button is="emby-button" id="toggleButtonOrder" class="raised"
+                style="width: 100%; text-align: left; padding: 0.7em; margin-bottom: 1em;">
+                <span class="md-icon" style="margin-right: 0.5em;">sort</span>
+                功能排序
+                <span class="md-icon" style="margin-left: auto;">expand_more</span>
+              </button>
+              <div id="buttonOrderContainer" style="display: none; padding: 1em; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              </div>
+            </div>
+
+            <!-- 代理设置区域 -->
+            <div class="setting-section">
+              <button is="emby-button" id="toggleProxySettings" class="raised"
+                style="width: 100%; text-align: left; padding: 0.7em; margin-bottom: 1em;">
+                <span class="md-icon" style="margin-right: 0.5em;">dns</span>
+                代理设置
+                <span class="md-icon" style="margin-left: auto;">expand_more</span>
+              </button>
+              <div id="proxySettingsContainer" style="display: none; padding: 1em; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                <div style="display: flex; flex-direction: column; gap: 0.5em;">
+                  <label>
+                    <input type="radio" name="proxyType" value="default" 
+                      ${!window.ede.customProxyServer ? 'checked' : ''}>
+                    使用默认代理服务器
+                  </label>
+                  <div style="display: flex; align-items: center; gap: 0.5em;">
+                    <label>
+                      <input type="radio" name="proxyType" value="custom"
+                        ${window.ede.customProxyServer ? 'checked' : ''}>
+                      自定义代理服务器
+                    </label>
+                    <input type="text" is="emby-input" id="customProxyInput"
+                      value="${window.ede.customProxyServer}"
+                      placeholder="https://your-proxy-server/"
+                      style="flex: 1; ${!window.ede.customProxyServer ? 'opacity: 0.5;' : ''}">
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1390,165 +1466,204 @@
     dialog.innerHTML = logDialogHtml;
     document.body.appendChild(dialog);
 
-    // 等待DOM渲染完成后再添加事件监听
-    requestAnimationFrame(() => {
-        // 获取所有按钮元素
-        const closeLogBtn = dialog.querySelector('#closeLogDialog');
-        const refreshLogBtn = dialog.querySelector('#refreshLogBtn');
-        const copyLogBtn = dialog.querySelector('#copyLogBtn');
-        const testCorsBtn = dialog.querySelector('#testCorsBtn');
-        const clearCacheBtn = dialog.querySelector('#clearCacheBtn');
-        const toggleMoreBtn = dialog.querySelector('#toggleMoreSettings');
-        const cacheEnabledCheckbox = dialog.querySelector('#cacheEnabledCheckbox');
+    // 获取所有需要的元素
+    const toggleLogBtn = dialog.querySelector('#toggleLogContent');
+    const logContent = dialog.querySelector('#logContent');
+    const toggleMoreBtn = dialog.querySelector('#toggleMoreSettings');
+    const moreSettings = dialog.querySelector('#moreSettings');
+    const toggleButtonOrderBtn = dialog.querySelector('#toggleButtonOrder');
+    const buttonOrderContainer = dialog.querySelector('#buttonOrderContainer');
+    const toggleProxySettingsBtn = dialog.querySelector('#toggleProxySettings');
+    const proxySettingsContainer = dialog.querySelector('#proxySettingsContainer');
 
-        // 生成日志内容的函数
-        function generateLogContent() {
-            let cacheSize = 0;
-            for (let i = 0; i < localStorage.length; i++) {
-              const key = localStorage.key(i);
-              if (key.startsWith('_danmaku_cache_') ||
-                  key.startsWith('_search_cache_')) {
-                cacheSize += localStorage.getItem(key).length;
-              }
-            }
-
-            return `User Agent: ${navigator.userAgent}
-    移动设备: ${isMobile}
-    视频元素: ${!!document.querySelector(mediaQueryStr)}
-    视频状态: ${document.querySelector(mediaQueryStr)?.readyState}
-    弹幕状态: ${!!window.ede?.danmaku}
-    原始弹幕数: ${window.ede?.originalCount || 0}
-    当前弹幕数: ${window.ede?.danmaku?.comments?.length || 0}
-    媒体容器: ${!!document.querySelector(mediaContainerQueryStr)}
-    弹幕开关: ${window.ede?.danmakuSwitch}
-    全局透明度: ${globalOpacity}
-    简繁转换: ${window.ede?.chConvert}
-    加载状态: ${window.ede?.loading}
-    当前播放信息: ${JSON.stringify(window.ede?.episode_info, null, 2)}
-    字体大小: ${isMobile ? fontSizeMobile : fontSizeDesktop}px
-    最后错误: ${window.ede?.lastError || '无'}
-    CORS状态: ${window.ede?.corsStatus || '未测试'}
-    自动匹配状态: ${window.ede?.autoMatchStatus || '未开始'}
-    API响应: ${window.ede?.lastApiResponse || '无'}
-    缓存信息:
-    - 搜索缓存: ${Object.keys(localStorage).filter(k =>
-      k.startsWith('_search_cache_')).length} 条
-    - 弹幕缓存: ${Object.keys(localStorage).filter(k =>
-      k.startsWith('_danmaku_cache_')).length} 条
-    - 总大小: ${(cacheSize / 1024 / 1024).toFixed(2)} MB`;
-        }
-
-        // 初始化日志内容
-        const logContent = dialog.querySelector('#logContent');
-        logContent.textContent = generateLogContent();
-
-        // 添加按钮点击事件
-        if (closeLogBtn) {
-            closeLogBtn.onclick = () => dialog.remove();
-        }
-
-        if (refreshLogBtn) {
-            refreshLogBtn.onclick = () => {
-                logContent.textContent = generateLogContent();
-            };
-        }
-
-        if (copyLogBtn) {
-            copyLogBtn.onclick = async () => {
-                const logText = generateLogContent();
-                try {
-                    if (navigator.clipboard && window.isSecureContext) {
-                        await navigator.clipboard.writeText(logText);
-                        showTooltip('日志已复制到剪贴板');
-                    } else {
-                        const textarea = document.createElement('textarea');
-                        textarea.value = logText;
-                        textarea.style.position = 'fixed';
-                        textarea.style.opacity = '0';
-                        textarea.style.pointerEvents = 'none';
-                        document.body.appendChild(textarea);
-                        textarea.focus();
-                        textarea.select();
-                        try {
-                            document.execCommand('copy');
-                            showTooltip('日志已复制到剪贴板');
-                        } catch (err) {
-                            console.error('复制失败:', err);
-                            showTooltip('复制失败，请手动复制日志内容', 'error');
-                        }
-                        document.body.removeChild(textarea);
-                    }
-                } catch (err) {
-                    console.error('复制失败:', err);
-                    showTooltip('复制失败，请手动复制日志内容', 'error');
-                }
-            };
-        }
-
-        if (testCorsBtn) {
-            testCorsBtn.onclick = async () => {
-                try {
-                    window.ede.corsStatus = '测试中...';
-                    if (refreshLogBtn) refreshLogBtn.click();
-
-                    const response = await fetch('https://ktl-api-cf.ygjddmz.workers.dev/api/v2/search/episodes?anime=test');
-                    const data = await response.json();
-
-                    window.ede.corsStatus = '成功';
-                    window.ede.lastApiResponse = JSON.stringify(data).slice(0, 100) + '...';
-                } catch (err) {
-                    window.ede.corsStatus = '失败: ' + err.message;
-                    window.ede.lastError = err.stack;
-                }
-                if (refreshLogBtn) refreshLogBtn.click();
-            };
-        }
-
-        if (clearCacheBtn) {
-            clearCacheBtn.onclick = () => {
-                try {
-                    const keys = Object.keys(localStorage).filter(k =>
-                        k.startsWith('_danmaku_cache_') || k.startsWith('_search_cache_'));
-                    keys.forEach(k => localStorage.removeItem(k));
-                    showTooltip('缓存已清除');
-                    logContent.textContent = generateLogContent();
-                } catch (err) {
-                    console.error('清除缓存失败:', err);
-                    showTooltip('清除缓存失败: ' + err.message, 'error');
-                }
-            };
-        }
-
-        if (toggleMoreBtn && cacheEnabledCheckbox) {
-            const moreSettings = dialog.querySelector('#moreSettings');
-            const buttonOrderContainer = dialog.querySelector('#buttonOrderContainer');
-
-            // 确保更多设置面板显示时才初始化按钮顺序列表
-            toggleMoreBtn.onclick = () => {
-              const isExpanded = moreSettings.style.display !== 'none';
-              moreSettings.style.display = isExpanded ? 'none' : 'block';
-              toggleMoreBtn.querySelector('.md-icon:last-child').textContent =
+    // 添加折叠/展开功能
+    function setupToggle(toggleBtn, content, icon) {
+        toggleBtn.onclick = () => {
+            const isExpanded = content.style.display !== 'none';
+            content.style.display = isExpanded ? 'none' : 'block';
+            toggleBtn.querySelector('.md-icon:last-child').textContent =
                 isExpanded ? 'expand_more' : 'expand_less';
+        };
+    }
 
-              // 第一次展开时初始化按钮顺序列表
-              if (!isExpanded && buttonOrderContainer && !buttonOrderContainer.children.length) {
-                updateButtonOrderList(buttonOrderContainer);
-              }
-            };
+    // 设置各个折叠面板的事件处理
+    setupToggle(toggleLogBtn, logContent);
+    setupToggle(toggleMoreBtn, moreSettings);
+    setupToggle(toggleButtonOrderBtn, buttonOrderContainer);
+    setupToggle(toggleProxySettingsBtn, proxySettingsContainer);
 
-            // 初始化缓存启用状态
-            cacheEnabledCheckbox.checked = window.ede.cacheEnabled;
-            cacheEnabledCheckbox.onchange = (e) => {
-                window.ede.cacheEnabled = e.target.checked;
-                window.localStorage.setItem('danmakuCacheEnabled', e.target.checked);
-            };
-        }
+    // ...其余的事件处理代码保持不变...
+
+    // 初始化日志内容
+    const refreshLog = () => {
+        logContent.textContent = generateLogContent();
+    };
+    refreshLog();
+
+    // 初始化功能排序列表
+    if (buttonOrderContainer) {
+        updateButtonOrderList(buttonOrderContainer);
+    }
+
+    // 初始化代理设置
+    const proxyTypeInputs = dialog.querySelectorAll('input[name="proxyType"]');
+    const customProxyInput = dialog.querySelector('#customProxyInput');
+
+    // 代理类型选择事件
+    proxyTypeInputs.forEach(input => {
+        input.addEventListener('change', () => {
+            if (input.value === 'default') {
+                window.ede.customProxyServer = '';
+                customProxyInput.value = '';
+                customProxyInput.style.opacity = '0.5';
+                window.localStorage.removeItem('danmakuCustomProxy');
+                window.ede.currentProxyIndex = 0;
+                window.localStorage.setItem('danmakuProxyIndex', 0);
+                showTooltip('已切换至默认代理服务器');
+            } else {
+                customProxyInput.style.opacity = '1';
+            }
+        });
     });
 
+    // 自定义代理输入事件
+    let proxyUpdateTimeout;
+    customProxyInput.addEventListener('input', () => {
+        clearTimeout(proxyUpdateTimeout);
+        proxyUpdateTimeout = setTimeout(() => {
+            const value = customProxyInput.value.trim();
+            if (value && value !== window.ede.customProxyServer) {
+                window.ede.customProxyServer = value;
+                window.localStorage.setItem('danmakuCustomProxy', value);
+                showTooltip('已更新自定义代理服务器');
+            }
+        }, 1000);
+    });
+
+    // 添加按钮事件处理
+    // 刷新日志按钮
+    dialog.querySelector('#refreshLogBtn').onclick = () => {
+      logContent.textContent = generateLogContent();
+    };
+
+    // 复制日志按钮
+    dialog.querySelector('#copyLogBtn').onclick = async () => {
+      try {
+        const logText = generateLogContent();
+        // 使用临时文本区域来复制文本
+        const textArea = document.createElement('textarea');
+        textArea.value = logText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        
+        showTooltip('日志已复制到剪贴板');
+      } catch (err) {
+        console.error('复制失败:', err);
+        showTooltip('复制失败，请手动复制', 'error');
+      }
+    };
+
+    // 测试CORS按钮
+    dialog.querySelector('#testCorsBtn').onclick = async () => {
+      try {
+        const testBtn = dialog.querySelector('#testCorsBtn');
+        testBtn.disabled = true;
+        testBtn.textContent = '测试中...';
+        window.ede.corsStatus = '测试中...';
+        
+        // 使用当前激活的代理服务器
+        const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
+        const testUrl = `${proxyServer}api/v2/search/episodes?anime=test`;
+        
+        const response = await fetch(testUrl);
+        const data = await response.json();
+        
+        if (response.ok && data) {
+          window.ede.corsStatus = '正常';
+          window.ede.lastApiResponse = JSON.stringify(data).slice(0, 100) + '...';
+          showTooltip('CORS测试通过');
+        } else {
+          window.ede.corsStatus = '异常: API响应无效';
+          window.ede.lastApiResponse = JSON.stringify(data);
+          showTooltip('CORS测试失败: API响应无效', 'error');
+        }
+      } catch (error) {
+        window.ede.corsStatus = '异常: ' + error.message;
+        window.ede.lastError = error.stack;
+        window.ede.lastApiResponse = 'Error: ' + error.message;
+        showTooltip('CORS测试失败: ' + error.message, 'error');
+      } finally {
+        const testBtn = dialog.querySelector('#testCorsBtn');
+        testBtn.disabled = false;
+        testBtn.textContent = '测试CORS';
+        // 更新日志显示
+        const logContent = dialog.querySelector('#logContent');
+        if (logContent) {
+          logContent.textContent = generateLogContent();
+        }
+      }
+    };
+
+    // 清除缓存按钮
+    dialog.querySelector('#clearCacheBtn').onclick = () => {
+      const keys = Object.keys(localStorage);
+      let count = 0;
+      for (const key of keys) {
+        if (key.startsWith('_danmaku_cache_') || 
+            key.startsWith('_search_cache_') || 
+            key.startsWith('_search_lock_')) {
+          localStorage.removeItem(key);
+          count++;
+        }
+      }
+      showTooltip(`已清除 ${count} 条缓存记录`);
+      logContent.textContent = generateLogContent();
+    };
+
+    dialog.querySelector('#closeLogDialog').onclick = () => dialog.remove();
     dialog.showModal();
 }
 
 // ...existing code...
+
+// 添加generateLogContent函数
+function generateLogContent() {
+    let cacheSize = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith('_danmaku_cache_') ||
+          key.startsWith('_search_cache_')) {
+        cacheSize += localStorage.getItem(key).length;
+      }
+    }
+
+    return `User Agent: ${navigator.userAgent}
+移动设备: ${isMobile}
+视频元素: ${!!document.querySelector(mediaQueryStr)}
+视频状态: ${document.querySelector(mediaQueryStr)?.readyState}
+弹幕状态: ${!!window.ede?.danmaku}
+原始弹幕数: ${window.ede?.originalCount || 0}
+当前弹幕数: ${window.ede?.danmaku?.comments?.length || 0}
+媒体容器: ${!!document.querySelector(mediaContainerQueryStr)}
+弹幕开关: ${window.ede?.danmakuSwitch}
+全局透明度: ${globalOpacity}
+简繁转换: ${window.ede?.chConvert}
+加载状态: ${window.ede?.loading}
+当前播放信息: ${JSON.stringify(window.ede?.episode_info, null, 2)}
+字体大小: ${isMobile ? fontSizeMobile : fontSizeDesktop}px
+最后错误: ${window.ede?.lastError || '无'}
+CORS状态: ${window.ede?.corsStatus || '未测试'}
+自动匹配状态: ${window.ede?.autoMatchStatus || '未开始'}
+API响应: ${window.ede?.lastApiResponse || '无'}
+缓存信息:
+- 搜索缓存: ${Object.keys(localStorage).filter(k =>
+  k.startsWith('_search_cache_')).length} 条
+- 弹幕缓存: ${Object.keys(localStorage).filter(k =>
+  k.startsWith('_danmaku_cache_')).length} 条
+- 总大小: ${(cacheSize / 1024 / 1024).toFixed(2)} MB`;
+}
 
   function showDanmakuSettingsDialog() {
     const settingsDialogHtml = `
