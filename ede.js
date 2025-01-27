@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       RyoLee
-// @version      1.0.13.7
+// @version      1.0.13.8
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -115,7 +115,7 @@
       }
       console.log('切换简繁转换');
       window.ede.chConvert = (window.ede.chConvert + 1) % 3;
-      window.localStorage.setItem('chConvert', window.ede.chConvert);
+      StorageManager.set('chConvert', window.ede.chConvert);
       document.querySelector('#translateDanmaku').setAttribute('title', chConverTtitle[window.ede.chConvert]);
       reloadDanmaku('reload');
       console.log(document.querySelector('#translateDanmaku').getAttribute('title'));
@@ -127,9 +127,9 @@
     innerText: null,
     onclick: () => {
       console.log('切换弹幕过滤等级');
-      let level = window.localStorage.getItem('danmakuFilterLevel');
+      let level = StorageManager.get('danmakuFilterLevel', 0);
       level = ((level ? parseInt(level) : 0) + 1) % 4;
-      window.localStorage.setItem('danmakuFilterLevel', level);
+      StorageManager.set('danmakuFilterLevel', level);
       document.querySelector('#filteringDanmaku').children[0].innerText = filter_icons[level];
       // 添加立即重载弹幕
       reloadDanmaku('reload');
@@ -142,7 +142,7 @@
     max: '100',
     value: '100',
     oninput: function() {
-      window.localStorage.setItem('danmakuTransparencyLevel', this.value);
+      StorageManager.set('danmakuTransparencyLevel', this.value);
       globalOpacity = this.value / 100;
     },
   };
@@ -153,7 +153,7 @@
     onclick: () => {
       console.log('切换弹幕信息显示');
       window.ede.showDanmakuInfo = !window.ede.showDanmakuInfo;
-      window.localStorage.setItem('showDanmakuInfo', window.ede.showDanmakuInfo);
+      StorageManager.set('showDanmakuInfo', window.ede.showDanmakuInfo);
       document.querySelector('#switchDanmakuInfo').children[0].innerText = info_switch_icons[window.ede.showDanmakuInfo ? 1 : 0];
       const infoElement = document.getElementById('videoOsdDanmakuTitle');
       if (infoElement) {
@@ -720,7 +720,7 @@
         console.log('Resizing');
         window.ede.danmaku.resize();
       }
-    }, 20)); // 从100ms降到50ms提高响应速度
+    }, 10)); // 将去抖间隔调小, 缓解弹幕卡顿
     window.ede.ob.observe(container);
   }
 
@@ -779,6 +779,15 @@
       window.ede.loading = false;
       setTimeout(() => reloadDanmaku(type), 500);
       return;
+    }
+
+    if (type === 'reload') {
+      // 强制清除缓存，确保简繁体切换后弹幕正确刷新
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('_danmaku_cache_')) {
+          localStorage.removeItem(key);
+        }
+      });
     }
 
     getEpisodeInfo(type != 'search')
@@ -1631,6 +1640,23 @@
       window.ede.cacheEnabled = cacheEnabledCheckbox.checked;
       window.localStorage.setItem('cacheEnabled', cacheEnabledCheckbox.checked);
     });
+
+    const style = document.createElement('style');
+    style.textContent = `
+      #toggleLogContent {
+        position: relative;
+      }
+      #toggleLogContent .md-icon {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        padding: 2px;
+        transition: background 0.2s;
+      }
+      #toggleLogContent .md-icon:hover {
+        background: rgba(255, 255, 255, 0.25);
+      }
+    `;
+    dialog.appendChild(style);
 }
 
 // ...existing code...
