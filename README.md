@@ -2,6 +2,8 @@
 
 ## Emby danmaku extension
 
+# 目前对接弹弹api的两个服务在大陆都有几率被墙，在没有代理的情况下可能加载不出弹幕，将在不久后移到腾讯云
+
 ![演示](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/演示.jpg)
 
 ## 版本变化
