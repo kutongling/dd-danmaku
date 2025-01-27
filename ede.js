@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       RyoLee
-// @version      1.0.13.5
+// @version      1.0.13.6
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -555,7 +555,7 @@
 
   async function searchAnimeDirectly(name) {
     try {
-      const searchUrl = 'https://ktl-dd.vercel.app/api/v2/search/episodes?anime=' + encodeURIComponent(name);
+      const searchUrl = 'https://ktl-api-cf.ygjddmz.workers.dev/api/v2/search/episodes?anime=' + encodeURIComponent(name);
       const response = await fetch(searchUrl);
       const animaInfo = await response.json();
 
@@ -600,7 +600,7 @@
 
   async function getCommentsDirectly(episodeId) {
     try {
-      const url = `https://ktl-dd.vercel.app/api/v2/comment/${episodeId}?withRelated=true&chConvert=${window.ede.chConvert}`;
+      const url = `https://ktl-api-cf.ygjddmz.workers.dev/api/v2/comment/${episodeId}?withRelated=true&chConvert=${window.ede.chConvert}`;
       const response = await fetch(url);
       const responseText = await response.text();
 
@@ -1185,7 +1185,7 @@
     const signal = controller.signal;
 
     try {
-      const searchUrl = 'https://ktl-dd.vercel.app/api/v2/search/episodes?anime=' + encodeURIComponent(name);
+      const searchUrl = 'https://ktl-api-cf.ygjddmz.workers.dev/api/v2/search/episodes?anime=' + encodeURIComponent(name);
       const promise = fetch(searchUrl, { signal })
         .then(response => response.json())
         .catch(error => {
@@ -1491,7 +1491,7 @@
                     window.ede.corsStatus = '测试中...';
                     if (refreshLogBtn) refreshLogBtn.click();
 
-                    const response = await fetch('https://ktl-dd.vercel.app/api/v2/search/episodes?anime=test');
+                    const response = await fetch('https://ktl-api-cf.ygjddmz.workers.dev/api/v2/search/episodes?anime=test');
                     const data = await response.json();
 
                     window.ede.corsStatus = '成功';
