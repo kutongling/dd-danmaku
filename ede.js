@@ -1624,12 +1624,22 @@
 
     dialog.querySelector('#closeLogDialog').onclick = () => dialog.remove();
     dialog.showModal();
+
+    const cacheEnabledCheckbox = dialog.querySelector('#cacheEnabledCheckbox');
+    cacheEnabledCheckbox.checked = window.ede.cacheEnabled;
+    cacheEnabledCheckbox.addEventListener('change', () => {
+      window.ede.cacheEnabled = cacheEnabledCheckbox.checked;
+      window.localStorage.setItem('cacheEnabled', cacheEnabledCheckbox.checked);
+    });
 }
 
 // ...existing code...
 
 // 添加generateLogContent函数
 function generateLogContent() {
+    // 获取当前代理服务器地址
+    const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
+    
     let cacheSize = 0;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -1653,6 +1663,7 @@ function generateLogContent() {
 加载状态: ${window.ede?.loading}
 当前播放信息: ${JSON.stringify(window.ede?.episode_info, null, 2)}
 字体大小: ${isMobile ? fontSizeMobile : fontSizeDesktop}px
+当前代理: ${proxyServer}
 最后错误: ${window.ede?.lastError || '无'}
 CORS状态: ${window.ede?.corsStatus || '未测试'}
 自动匹配状态: ${window.ede?.autoMatchStatus || '未开始'}
