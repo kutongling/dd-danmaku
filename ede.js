@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
-// @author       RyoLee
-// @version      1.0.14
+// @author       kumuze
+// @version      1.0.14.4
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg
