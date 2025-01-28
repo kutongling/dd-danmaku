@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       RyoLee
-// @version      1.0.13.8
+// @version      1.0.13.9
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -153,9 +153,19 @@
     onclick: () => {
       console.log('切换弹幕信息显示');
       window.ede.showDanmakuInfo = !window.ede.showDanmakuInfo;
-      StorageManager.set('showDanmakuInfo', window.ede.showDanmakuInfo);
-      document.querySelector('#switchDanmakuInfo').children[0].innerText = info_switch_icons[window.ede.showDanmakuInfo ? 1 : 0];
-      const infoElement = document.getElementById('videoOsdDanmakuTitle');
+      window.localStorage.setItem('showDanmakuInfo', window.ede.showDanmakuInfo);
+      
+      // 更新按钮图标
+      const button = document.querySelector('#switchDanmakuInfo');
+      if (button) {
+        const icon = button.querySelector('.md-icon');
+        if (icon) {
+          icon.innerText = info_switch_icons[window.ede.showDanmakuInfo ? 1 : 0];
+        }
+      }
+      
+      // 更新信息显示
+      const infoElement = document.querySelector('#videoOsdDanmakuTitle');
       if (infoElement) {
         infoElement.style.display = window.ede.showDanmakuInfo ? 'block' : 'none';
       }
