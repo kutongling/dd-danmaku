@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       RyoLee
-// @version      1.0.13.9
+// @version      1.0.14
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -573,7 +573,7 @@
 
   // 在全局配置区域添加代理配置
   const defaultProxyServers = [
-    'https://ktl-dd.vercel.app/',
+    'https://www.kumuze-dd.icu/',
     'https://ktl-api-cf.ygjddmz.workers.dev/'
   ];
 
