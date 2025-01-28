@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
-// @author       RyoLee
-// @version      1.0.14
+// @author       kumzue
+// @version      1.0.14.1
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
-// @license      MIT
+// @license      MIT;https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
 // @grant        none
 // @match        */web/index.html
@@ -573,8 +573,7 @@
 
   // 在全局配置区域添加代理配置
   const defaultProxyServers = [
-    'https://www.kumuze-dd.icu/',
-    'https://ktl-api-cf.ygjddmz.workers.dev/'
+    'https://www.kumuze-dd.icu/'
   ];
 
   async function searchAnimeDirectly(name) {
@@ -1057,10 +1056,7 @@
     </div>`;
 
   function showSearchDialog() {
-    const dialog = document.createElement('dialog');
-    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 800px; background: transparent; padding: 0;';
-    dialog.innerHTML = searchAnimeTemplateHtml;
-    document.body.appendChild(dialog);
+    const dialog = createDialog(searchAnimeTemplateHtml, '800px');
 
     // 添加样式
     const style = document.createElement('style');
@@ -1347,10 +1343,7 @@
         </div>
     `;
 
-    const dialog = document.createElement('dialog');
-    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 600px; background: transparent; padding: 0;';
-    dialog.innerHTML = filterDialogHtml;
-    document.body.appendChild(dialog);
+    const dialog = createDialog(filterDialogHtml, '600px');
 
     // 获取已保存的过滤类型
     const selectedTypes = window.localStorage.getItem('danmakuTypeFilter') ?
@@ -1480,10 +1473,7 @@
       </div>
     `;
 
-    const dialog = document.createElement('dialog');
-    dialog.style = 'border: 0; width: 80%; max-width: 800px; background: transparent; padding: 0;';
-    dialog.innerHTML = logDialogHtml;
-    document.body.appendChild(dialog);
+    const dialog = createDialog(logDialogHtml, '800px');
 
     // 获取所有需要的元素
     const toggleLogBtn = dialog.querySelector('#toggleLogContent');
@@ -1757,10 +1747,7 @@ API响应: ${window.ede?.lastApiResponse || '无'}
       </div>
     `;
 
-    const dialog = document.createElement('dialog');
-    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 600px; background: transparent; padding: 0;';
-    dialog.innerHTML = settingsDialogHtml;
-    document.body.appendChild(dialog);
+    const dialog = createDialog(settingsDialogHtml, '600px');
 
     // 获取元素
     const transparencySlider = dialog.querySelector('#transparencySlider');
@@ -1922,10 +1909,7 @@ API响应: ${window.ede?.lastApiResponse || '无'}
       </div>
     `;
 
-    const dialog = document.createElement('dialog');
-    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 600px; background: transparent; padding: 0;';
-    dialog.innerHTML = filterSettingsDialogHtml;
-    document.body.appendChild(dialog);
+    const dialog = createDialog(filterSettingsDialogHtml, '600px');
 
     // 添加样式
     const style = document.createElement('style');
