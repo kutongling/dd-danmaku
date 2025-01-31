@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       kumuze
-// @version      1.0.14.5
+// @version      1.0.15
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT;https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -22,9 +22,10 @@
   const search_icon = '\uE881';
   const translate_icon = '\uE927';
   const filter_icons = ['\uE3E0', '\uE3D0', '\uE3D1', '\uE3D2'];
+  const transparency_icons = ['\uEBDC', '\uEBD9', '\uEBE0', '\uEBE2', '\uEBE2', '\uEBD4', '\uEBD2', '\uE1A4'];
   const info_switch_icons = ['\uE8F5', '\uE8F4']; // 关闭/显示
-  const more_filter_icon = '\uE5D3';  // 添加回这个
-  const log_icon = '\uE86D';  // 添加回这个
+  const more_filter_icon = '\uE5D3'; // 更多过滤图标
+  const log_icon = '\uE86D'; // 添加日志图标常量
   const settings_icon = '\uE8B8'; // 设置图标
   const reset_icon = '\uE166'; // 重置图标
 
@@ -36,34 +37,24 @@
     class: 'paper-icon-button-light',
     is: 'paper-icon-button-light',
   };
-
-  // 添加 createDialog 函数的定义到这里
-  function createDialog(content, width = '400px') {
-    const dialog = document.createElement('dialog');
-    dialog.innerHTML = content;
-    dialog.style.cssText = `
-      padding: 0;
-      border: none;
-      border-radius: 16px;
-      background: transparent;
-      max-width: 90vw;
-      width: ${width};
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    `;
-
-    // 添加背景遮罩
-    dialog.addEventListener('click', (e) => {
-      const rect = dialog.getBoundingClientRect();
-      const isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
-        rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
-      if (!isInDialog) {
-        dialog.remove();
-      }
-    });
-
-    document.body.appendChild(dialog);
-    return dialog;
-  }
+  const rangeSliderOptions = {
+    class: 'emby-slider emby-slider-scalebg emby-slider-nothumb',
+    is: 'emby-slider',
+  };
+  const sliderContainerOptions = {
+    class: 'slidercontainer flex-grow emby-slider-container',
+  };
+  const sliderWrapperOptions = {
+    class: 'videoOsdVolumeSliderWrapper flex-grow',
+  };
+  const sliderdivOptions = {
+    class: 'videoOsdVolumeControls flex flex-direction-row align-items-center',
+    style: 'position:relative;',
+  };
+  const sliderLabelOptions = {
+    class: 'sliderLabel',
+    style: 'margin-right: 1em; min-width: 100px;'
+  };
 
   //定位标志常量
   const uiAnchorStr = '\uE034';
@@ -163,7 +154,7 @@
       console.log('切换弹幕信息显示');
       window.ede.showDanmakuInfo = !window.ede.showDanmakuInfo;
       window.localStorage.setItem('showDanmakuInfo', window.ede.showDanmakuInfo);
-
+      
       // 更新按钮图标
       const button = document.querySelector('#switchDanmakuInfo');
       if (button) {
@@ -172,7 +163,7 @@
           icon.innerText = info_switch_icons[window.ede.showDanmakuInfo ? 1 : 0];
         }
       }
-
+      
       // 更新信息显示
       const infoElement = document.querySelector('#videoOsdDanmakuTitle');
       if (infoElement) {
@@ -210,16 +201,6 @@
     innerText: settings_icon,
     onclick: () => {
       showDanmakuSettingsDialog();
-    },
-  };
-
-  // 修复 filterSettingsButtonOpts 的图标引用
-  const filterSettingsButtonOpts = {
-    title: '过滤设置',
-    id: 'filterSettings', 
-    innerText: filter_icons[0],  // 使用 filter_icons 而不是之前未定义的变量
-    onclick: () => {
-      showFilterSettingsDialog();
     },
   };
 
@@ -261,7 +242,7 @@
       this.buttonOrder = window.localStorage.getItem('danmakuButtonOrder') ?
       JSON.parse(window.localStorage.getItem('danmakuButtonOrder')) :
       ['displayDanmaku', 'danmakuSettings', 'filterSettings', 'switchDanmakuInfo', 'searchDanmaku', 'showDanmakuLog'];
-
+      
       // 添加代理相关配置
       this.currentProxyIndex = 0;
       this.customProxyServer = window.localStorage.getItem('danmakuCustomProxy') || '';
@@ -295,21 +276,14 @@
   }
 
   function createButton(opt) {
-    const button = document.createElement('button');
-    button.setAttribute('is', buttonOptions.is);
-    button.className = buttonOptions.class;
+    let button = document.createElement('button', buttonOptions);
     button.setAttribute('title', opt.title);
     button.setAttribute('id', opt.id);
-
-    const icon = document.createElement('span');
+    let icon = document.createElement('span');
     icon.className = 'md-icon';
     icon.innerText = opt.innerText;
     button.appendChild(icon);
-
-    if (opt.onclick) {
-      button.onclick = opt.onclick;
-    }
-
+    button.onclick = opt.onclick;
     return button;
   }
 
@@ -607,12 +581,12 @@
       // 获取当前代理服务器
       const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
       const searchUrl = `${proxyServer}api/v2/search/episodes?anime=${encodeURIComponent(name)}`;
-
+      
       const response = await fetch(searchUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+      
       const animaInfo = await response.json();
       // ...existing code...
       if (!animaInfo || !animaInfo.animes || animaInfo.animes.length === 0) {
@@ -665,7 +639,7 @@
     try {
       const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
       const url = `${proxyServer}api/v2/comment/${episodeId}?withRelated=true&chConvert=${window.ede.chConvert}`;
-
+      
       const response = await fetch(url);
       const responseText = await response.text();
 
@@ -1082,7 +1056,10 @@
     </div>`;
 
   function showSearchDialog() {
-    const dialog = createDialog(searchAnimeTemplateHtml, '800px');
+    const dialog = document.createElement('dialog');
+    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 800px; background: transparent; padding: 0;';
+    dialog.innerHTML = searchAnimeTemplateHtml;
+    document.body.appendChild(dialog);
 
     // 添加样式
     const style = document.createElement('style');
@@ -1369,7 +1346,10 @@
         </div>
     `;
 
-    const dialog = createDialog(filterDialogHtml, '600px');
+    const dialog = document.createElement('dialog');
+    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 600px; background: transparent; padding: 0;';
+    dialog.innerHTML = filterDialogHtml;
+    document.body.appendChild(dialog);
 
     // 获取已保存的过滤类型
     const selectedTypes = window.localStorage.getItem('danmakuTypeFilter') ?
@@ -1423,7 +1403,7 @@
             <span class="md-icon">close</span>
           </button>
         </div>
-
+        
         <!-- 日志内容 - 默认折叠 -->
         <div id="logContent" style="display: none; white-space: pre-wrap; background: #333; padding: 1em; max-height: 400px; overflow-y: auto;"></div>
 
@@ -1467,7 +1447,7 @@
               <div id="proxySettingsContainer" style="display: none; padding: 1em; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <div style="display: flex; flex-direction: column; gap: 0.5em;">
                   <label>
-                    <input type="radio" name="proxyType" value="default"
+                    <input type="radio" name="proxyType" value="default" 
                       ${!window.ede.customProxyServer ? 'checked' : ''}>
                     使用默认代理服务器
                   </label>
@@ -1499,7 +1479,10 @@
       </div>
     `;
 
-    const dialog = createDialog(logDialogHtml, '800px');
+    const dialog = document.createElement('dialog');
+    dialog.style = 'border: 0; width: 80%; max-width: 800px; background: transparent; padding: 0;';
+    dialog.innerHTML = logDialogHtml;
+    document.body.appendChild(dialog);
 
     // 获取所有需要的元素
     const toggleLogBtn = dialog.querySelector('#toggleLogContent');
@@ -1592,7 +1575,7 @@
         textArea.select();
         document.execCommand('copy');
         document.body.removeChild(textArea);
-
+        
         showTooltip('日志已复制到剪贴板');
       } catch (err) {
         console.error('复制失败:', err);
@@ -1607,14 +1590,14 @@
         testBtn.disabled = true;
         testBtn.textContent = '测试中...';
         window.ede.corsStatus = '测试中...';
-
+        
         // 使用当前激活的代理服务器
         const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
         const testUrl = `${proxyServer}api/v2/search/episodes?anime=test`;
-
+        
         const response = await fetch(testUrl);
         const data = await response.json();
-
+        
         if (response.ok && data) {
           window.ede.corsStatus = '正常';
           window.ede.lastApiResponse = JSON.stringify(data).slice(0, 100) + '...';
@@ -1646,8 +1629,8 @@
       const keys = Object.keys(localStorage);
       let count = 0;
       for (const key of keys) {
-        if (key.startsWith('_danmaku_cache_') ||
-            key.startsWith('_search_cache_') ||
+        if (key.startsWith('_danmaku_cache_') || 
+            key.startsWith('_search_cache_') || 
             key.startsWith('_search_lock_')) {
           localStorage.removeItem(key);
           count++;
@@ -1691,7 +1674,7 @@
 function generateLogContent() {
     // 获取当前代理服务器地址
     const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
-
+    
     let cacheSize = 0;
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -1773,7 +1756,10 @@ API响应: ${window.ede?.lastApiResponse || '无'}
       </div>
     `;
 
-    const dialog = createDialog(settingsDialogHtml, '600px');
+    const dialog = document.createElement('dialog');
+    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 600px; background: transparent; padding: 0;';
+    dialog.innerHTML = settingsDialogHtml;
+    document.body.appendChild(dialog);
 
     // 获取元素
     const transparencySlider = dialog.querySelector('#transparencySlider');
@@ -1935,7 +1921,10 @@ API响应: ${window.ede?.lastApiResponse || '无'}
       </div>
     `;
 
-    const dialog = createDialog(filterSettingsDialogHtml, '600px');
+    const dialog = document.createElement('dialog');
+    dialog.style = 'border: 0; width: 40%; min-width: 320px; max-width: 600px; background: transparent; padding: 0;';
+    dialog.innerHTML = filterSettingsDialogHtml;
+    document.body.appendChild(dialog);
 
     // 添加样式
     const style = document.createElement('style');
@@ -2172,16 +2161,16 @@ API响应: ${window.ede?.lastApiResponse || '无'}
       window.ede.buttonOrder = defaultOrder;
       window.localStorage.setItem('danmakuButtonOrder', JSON.stringify(defaultOrder));
       updateButtonOrderList(container);
-
+      
       await new Promise(resolve => setTimeout(resolve, 0));
-
+      
       if (document.getElementById('danmakuCtr')) {
         const danmakuCtr = document.getElementById('danmakuCtr');
         danmakuCtr.remove();
         await new Promise(resolve => setTimeout(resolve, 0));
         initUI();
       }
-
+      
       showTooltip('已还原默认按钮顺序');
     };
     container.appendChild(resetButton);
@@ -2227,10 +2216,10 @@ API响应: ${window.ede?.lastApiResponse || '无'}
       item.addEventListener('drop', (e) => {
         e.preventDefault();
         item.classList.remove('drag-over');
-
+        
         const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
         const toIndex = index;
-
+        
         if (fromIndex === toIndex) return;
 
         const newOrder = [...window.ede.buttonOrder];
@@ -2241,7 +2230,7 @@ API响应: ${window.ede?.lastApiResponse || '无'}
         window.localStorage.setItem('danmakuButtonOrder', JSON.stringify(newOrder));
 
         updateButtonOrderList(container);
-
+        
         if (document.getElementById('danmakuCtr')) {
           document.getElementById('danmakuCtr').remove();
           initUI();
@@ -2332,4 +2321,6 @@ API响应: ${window.ede?.lastApiResponse || '无'}
       setTimeout(() => tooltip.remove(), 300);
     }, 2000);
   }
+
+  // ...rest of IIFE code...
 })();
