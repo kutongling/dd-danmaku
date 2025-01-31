@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       kumuze
-// @version      1.0.14.4
+// @version      1.0.14.5
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT;https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -22,10 +22,9 @@
   const search_icon = '\uE881';
   const translate_icon = '\uE927';
   const filter_icons = ['\uE3E0', '\uE3D0', '\uE3D1', '\uE3D2'];
-  const transparency_icons = ['\uEBDC', '\uEBD9', '\uEBE0', '\uEBE2', '\uEBE2', '\uEBD4', '\uEBD2', '\uE1A4'];
   const info_switch_icons = ['\uE8F5', '\uE8F4']; // 关闭/显示
-  const more_filter_icon = '\uE5D3'; // 更多过滤图标
-  const log_icon = '\uE86D'; // 添加日志图标常量
+  const more_filter_icon = '\uE5D3';  // 添加回这个
+  const log_icon = '\uE86D';  // 添加回这个
   const settings_icon = '\uE8B8'; // 设置图标
   const reset_icon = '\uE166'; // 重置图标
 
@@ -36,24 +35,6 @@
   const buttonOptions = {
     class: 'paper-icon-button-light',
     is: 'paper-icon-button-light',
-  };
-  const rangeSliderOptions = {
-    class: 'emby-slider emby-slider-scalebg emby-slider-nothumb',
-    is: 'emby-slider',
-  };
-  const sliderContainerOptions = {
-    class: 'slidercontainer flex-grow emby-slider-container',
-  };
-  const sliderWrapperOptions = {
-    class: 'videoOsdVolumeSliderWrapper flex-grow',
-  };
-  const sliderdivOptions = {
-    class: 'videoOsdVolumeControls flex flex-direction-row align-items-center',
-    style: 'position:relative;',
-  };
-  const sliderLabelOptions = {
-    class: 'sliderLabel',
-    style: 'margin-right: 1em; min-width: 100px;'
   };
 
   // 添加 createDialog 函数的定义到这里
@@ -229,6 +210,16 @@
     innerText: settings_icon,
     onclick: () => {
       showDanmakuSettingsDialog();
+    },
+  };
+
+  // 修复 filterSettingsButtonOpts 的图标引用
+  const filterSettingsButtonOpts = {
+    title: '过滤设置',
+    id: 'filterSettings', 
+    innerText: filter_icons[0],  // 使用 filter_icons 而不是之前未定义的变量
+    onclick: () => {
+      showFilterSettingsDialog();
     },
   };
 
