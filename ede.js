@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       kumuze
-// @version      1.0.15
+// @version      1.0.15.2
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT;https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -720,56 +720,33 @@
       window.ede.danmaku.hide();
     }
 
-    // 优化resize监听
+    // 简化 resize 监听
     if (window.ede.ob) {
       window.ede.ob.disconnect();
     }
-    window.ede.ob = new ResizeObserver(debounce(() => {
+    window.ede.ob = new ResizeObserver(() => {
       if (window.ede.danmaku) {
         console.log('Resizing');
         window.ede.danmaku.resize();
       }
-    }, 10)); // 将去抖间隔调小, 缓解弹幕卡顿
+    });
     window.ede.ob.observe(container);
   }
 
-  // 辅助函数
-  function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
-    };
-  }
-
   async function waitForVideoElement() {
-    let attempts = 0;
-    while (attempts < 50) {
-      const video = document.querySelector(mediaQueryStr);
-      if (video && video.readyState) {
-        return video;
-      }
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
+    const video = document.querySelector(mediaQueryStr);
+    if (video && video.readyState) {
+      return video;
     }
     return null;
   }
 
   async function waitForContainer() {
-    let attempts = 0;
-    while (attempts < 50) {
-      const containers = document.querySelectorAll(mediaContainerQueryStr);
-      for (const container of containers) {
-        if (!container.classList.contains('hide')) {
-          return container;
-        }
+    const containers = document.querySelectorAll(mediaContainerQueryStr);
+    for (const container of containers) {
+      if (!container.classList.contains('hide')) {
+        return container;
       }
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
     }
     return null;
   }
@@ -1672,8 +1649,8 @@
 
 // 添加generateLogContent函数
 function generateLogContent() {
-    // 获取当前代理服务器地址
-    const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
+    // 获取当前代理服务器地址，自定义代理显示实际地址，默认代理显示"默认服务器"
+    const proxyServer = window.ede.customProxyServer || '默认服务器';
     
     let cacheSize = 0;
     for (let i = 0; i < localStorage.length; i++) {
@@ -2116,23 +2093,11 @@ API响应: ${window.ede?.lastApiResponse || '无'}
   if (!window.ede) {
     window.ede = new EDE();
 
-    // 添加视频就绪检查函数
-    const waitForVideoReady = async () => {
-      const video = document.querySelector(mediaQueryStr);
-      return video && video.readyState;
-    };
-
     setInterval(() => {
       initUI();
     }, check_interval);
 
-    // 等待 Emby 项和视频就绪
-    while (!(await getEmbyItemInfo()) || !(await waitForVideoReady())) {
-      await new Promise((resolve) => setTimeout(resolve, 200));
-    }
-
-    // 确保视频就绪后再初始化弹幕
-    await new Promise(resolve => setTimeout(resolve, 500)); // 额外等待以确保完全就绪
+    // 直接初始化弹幕,不等待
     reloadDanmaku('init');
 
     setInterval(() => {

@@ -6,14 +6,25 @@
 
 ## 版本变化
 
+### 1.0.15.2
+
+1. 功能优化:
+
+   * 去除多余等待
+   * 去除防抖
+2. 修复问题:
+
+   * 修复某些情况下按钮排序不生效的问题
+
 ### 1.0.14
 
 1. 修复问题：
+
    * 修复弹幕信息显示开关不工作的问题
    * 修复弹幕按钮布局重置失效的问题
    * 优化代理服务器切换逻辑
-
 2. 优化更新：
+
    * 改进代理服务器配置，提高稳定性
    * 优化弹幕加载速度
    * 更新默认代理服务器地址
@@ -69,11 +80,11 @@
 - 修复手动填充时无法自动填充标题和集数的问题
 
 ## 展示
-  ![1](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-09.png)
-  ![2](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-21.png)
-  ![3](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-32.png)
-  ![4](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-40.png)
-  
+
+![1](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-09.png)
+![2](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-21.png)
+![3](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-32.png)
+![4](https://raw.githubusercontent.com/kutongling/emby-danmaku/master/图片/PixPin_2025-01-27_01-19-40.png)
 
 ## 引用项目
 
