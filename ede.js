@@ -2,7 +2,7 @@
 // @name         Emby danmaku extension
 // @description  Emby弹幕插件
 // @author       kumuze
-// @version      1.0.15.2
+// @version      1.0.15.3
 // @copyright    2022, RyoLee (https://github.com/RyoLee), hibackd (https://github.com/hiback/emby-danmaku), chen3861229 (https://github.com/chen3861229/dd-danmaku) - Modified by kutongling (https://github.com/kutongling)
 // @license      MIT;https://raw.githubusercontent.com/RyoLee/emby-danmaku/master/LICENSE
 // @icon         https://github.githubassets.com/pinned-octocat.svg
@@ -1217,7 +1217,10 @@
     const signal = controller.signal;
 
     try {
-      const searchUrl = 'https://ktl-api-cf.ygjddmz.workers.dev/api/v2/search/episodes?anime=' + encodeURIComponent(name);
+      // 获取当前代理服务器
+      const proxyServer = window.ede.customProxyServer || defaultProxyServers[window.ede.currentProxyIndex];
+      const searchUrl = `${proxyServer}api/v2/search/episodes?anime=${encodeURIComponent(name)}`;
+      
       const promise = fetch(searchUrl, { signal })
         .then(response => response.json())
         .catch(error => {
