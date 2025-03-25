@@ -573,7 +573,7 @@
 
   // 在全局配置区域添加代理配置
   const defaultProxyServers = [
-    'http://dd.kumuze.fun/'
+    'https://www.kumuze-dd.icu/'
   ];
 
   async function searchAnimeDirectly(name) {
@@ -2289,6 +2289,5 @@ API响应: ${window.ede?.lastApiResponse || '无'}
       setTimeout(() => tooltip.remove(), 300);
     }, 2000);
   }
-
   // ...rest of IIFE code...
 })();
