@@ -573,7 +573,7 @@
 
   // 在全局配置区域添加代理配置
   const defaultProxyServers = [
-    'https://www.kumuze-dd.icu/'
+    'http://dd.kumuze.fun/'
   ];
 
   async function searchAnimeDirectly(name) {
